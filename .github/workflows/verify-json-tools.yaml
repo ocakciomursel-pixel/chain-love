@@ -1,0 +1,31 @@
+name: Verify json-tools PR heads
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit-tests:
+    name: json-tools PR ${{ matrix.pr }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pr: 4967
+            sha: fbc863804572de67056203c7f4b21dc13077e102
+          - pr: 4968
+            sha: f3390f56d287a69f8af10b8fea4bdbbb2584049a
+          - pr: 4969
+            sha: 6885a1995471624ade1746a148274dd8121f57e0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r tools/requirements.txt
+      - run: python -B -m unittest discover -s tools -v
+      - run: git diff --exit-code && git diff --check
